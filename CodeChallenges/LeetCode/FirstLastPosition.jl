@@ -33,9 +33,10 @@ nums is a non-decreasing array.
 
 =#
 
+
 function first_last_position(nums::Array{Int64, 1}, target::Int64)
 
-    i = 1
+    i = 0
 
     
 
@@ -45,24 +46,30 @@ function first_last_position(nums::Array{Int64, 1}, target::Int64)
 
 
 
-    function find_first_element(nums::Array{Int64, 1}, target::Int64, first_pos::Int64 ,last_pos::Int64)
+    function find_first_element(nums::Array{Int64, 1}, target::Int64, first_pos::Int64 ,last_pos::Int64, i::Int64)
         
+        i += 1
+        mid_point = updiv(last_pos + first_pos)
         
-        if nums[first_pos] == target
+        if i > length(nums) || first_pos > length(nums) || mid_point > length(nums)
 
-            return first_pos
+            return -1
 
+        elseif nums[first_pos] == target
+
+            return first_pos            
+            
         end
 
-        mid_point = updiv(last_pos + first_pos)
+        
 
 
         if nums[mid_point] >= target
 
-            find_first_element(nums, target, first_pos + 1, mid_point)
+            find_first_element(nums, target, first_pos + 1, mid_point, i)
         elseif nums[mid_point] < target
 
-            find_first_element(nums, target, mid_point + 1, last_pos)
+            find_first_element(nums, target, mid_point + 1, last_pos, i)
 
         end
 
@@ -70,10 +77,14 @@ function first_last_position(nums::Array{Int64, 1}, target::Int64)
     
     function find_last_element(nums::Array{Int64, 1}, target::Int64, first_pos::Int64 ,last_pos::Int64)
         
+
+
+
         if nums[last_pos] == target
 
             return last_pos
-
+                 
+           
         end
 
         mid_point = updiv(last_pos + first_pos)
@@ -102,26 +113,11 @@ function first_last_position(nums::Array{Int64, 1}, target::Int64)
     @assert nums_len <= 10^5 "The array must not be longer than 10^5 elements"
     @assert (target >= -10^9) && (target <= 10^9) "Target must be within [-10^9, 10^9]"
 
-    if target ∉ nums
 
-        return [-1,-1]
-    else
 
-        first_index = find_first_element(nums, target, 1, nums_len)
+    first_index = find_first_element(nums, target, 1, nums_len, i)
+    first_index == -1 ? [-1, -1] :  [first_index, find_last_element(nums, target, first_index, nums_len)]
 
-        try
-            if target ∉ nums[first_index + 1:end]
-
-                return [first_index, first_index]
-            else
-                
-                return  [first_index, find_last_element(nums, target, first_index + 1, nums_len)] 
-            end
-        catch BoundsError
-
-            return[first_index, first_index]
-        end
-    end
 end
 
 @assert first_last_position([1,1,1,1,1],1) == [1,5]
