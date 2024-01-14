@@ -146,4 +146,8 @@ try
 catch
 end
 
+#Time Complexity: O(Log(n))
+#Space Complexity: O(1)
+
 println("TESTS PASSED")
+
