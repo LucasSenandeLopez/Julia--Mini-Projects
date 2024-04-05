@@ -9,7 +9,9 @@ Sub passData()
     Dim sheetName As String
     Dim metricNames() As Variant
     
-    metricNames = Array("Assets", "BVE", "NI", "MarketCap", "RoE", "RoA", "Price", "EnterpriseValue", "CommonSharesOutstanding", "Cash", "EBIT")
+    metricNames = Array("Assets (th USD)", "BVE", "NI", "MarketCap", "RoE", _
+        "RoA", "Price", "EnterpriseValue", _
+        "CommonSharesOutstanding", "Cash", "EBIT")
     
     sheetName = "Results"
     
@@ -39,6 +41,7 @@ Sub passData()
                 Val = Sheets(2).Cells(company + 1, 10 * iteration + 2 + year).Value
                 
                 If ((iteration = 4) Or (iteration = 5)) And Not (Val = "n.a.") Then Val = Val / 100
+                If (iteration = 8) And Not (Val = "n.a.") Then Val = Val * 1000
 
                 Sheets(company + 2).Cells(iteration + 2, year + 1).Value = Val
              
@@ -69,6 +72,32 @@ Sub passData()
     
     Next
 
+    Call addDebt
 
+End Sub
+
+Sub addDebt()
+
+    Dim company As Integer
+    Dim row As Integer
+
+
+    For company = 3 To Sheets.Count
+    
+        Sheets(company).Activate
+    
+        Range("M1").Value = "D = Ent. Value - E (m. Cap) + Cash"
+    
+        For row = 2 To 11
+        
+            If (Range("I" & row).Value <> "n.a.") And (Range("K" & row).Value <> "n.a.") And (Range("E" & row).Value <> "n.a.") Then
+    
+                Range("M" & row).Value = Range("I" & row).Value + Range("K" & row).Value - Range("E" & row).Value
+                
+            End If
+        
+        Next
+        
+    Next
 
 End Sub
