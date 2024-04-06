@@ -4,14 +4,18 @@ Sub passData()
 
     Dim company As Integer
     Dim year As Integer
-    Dim iteration As Integer
+    Dim field As Integer
     Dim Val As Variant
     Dim sheetName As String
-    Dim metricNames() As Variant
+    Dim fieldNames() As Variant
+    Dim numFields As Integer
     
-    metricNames = Array("Assets (th USD)", "BVE", "NI", "MarketCap", "RoE", _
+    fieldNames = Array("Assets (th USD)", "BVE", "NI", "MarketCap", "RoE", _
         "RoA", "Price", "EnterpriseValue", _
-        "CommonSharesOutstanding", "Cash", "EBIT")
+        "CommonSharesOutstanding", "Cash", "EBIT", "EBT", "Sales", "D&A")
+        
+    numFields = UBound(fieldNames) - LBound(fieldNames)
+   
     
     sheetName = "Results"
     
@@ -32,18 +36,18 @@ Sub passData()
     End If
 
 
-    For iteration = 0 To 10
+    For field = 0 To numFields
 
         For company = 1 To 5
         
             For year = 1 To 10
             
-                Val = Sheets(2).Cells(company + 1, 10 * iteration + 2 + year).Value
+                Val = Sheets(2).Cells(company + 1, 10 * field + 2 + year).Value
                 
-                If ((iteration = 4) Or (iteration = 5)) And Not (Val = "n.a.") Then Val = Val / 100
-                If (iteration = 8) And Not (Val = "n.a.") Then Val = Val * 1000
+                If ((field = 4) Or (field = 5)) And Not (Val = "n.a.") Then Val = Val / 100
+                If (field = 8) And Not (Val = "n.a.") Then Val = Val * 1000
 
-                Sheets(company + 2).Cells(iteration + 2, year + 1).Value = Val
+                Sheets(company + 2).Cells(year + 1, field + 2).Value = Val ' Introduce el valor en la celda correspondiente
              
             Next
             
@@ -58,46 +62,35 @@ Sub passData()
     
         For year = 2014 To 2023
         
-            Cells(1, year - 2012).Value = year
+            Cells(year - 2012, 1).Value = year
             
-            Cells(year - 2012, 1).Value = metricNames(year - 2014)
+            
+            ' Effective tax rate
+            Cells(year - 2012, numFields + 3).Value = (Cells(year - 2012, 13).Value / Cells(year - 2012, 4).Value) - 1
+            
+            
+            
+            ' Market Value of Debt
+            Cells(year - 2012, numFields + 4).Value = Cells(year - 2012, 9).Value + Cells(year - 2012, 11).Value - Cells(year - 2012, 5).Value
+            
+            ' Common Shares outstanding if missing
+            If Cells(year - 2012, 10).Value = "n.a." Then Cells(year - 2012, 10).Value = _
+                Round(Cells(year - 2012, 5).Value / Cells(year - 2012, 8).Value)
     
         Next
         
-            Cells(12, 1) = metricNames(10)
+        For field = 0 To numFields
+        
+            ' Because of zero indexing, we have to sum one so it doesn't go out of range and 2 so it does not fill the year column
+            Cells(1, field + 2) = fieldNames(field)
             
-            Range("A1:L11").Value = Application.WorksheetFunction.Transpose(Range("A1:K12"))
-            Range("A12:L12").ClearContents
+        Next
+            
+            Cells(1, numFields + 3) = "Effective Tax rate"
+            Cells(1, 1).Value = "Year"
+            Cells(1, numFields + 4) = "D" ' Places the Debt header
             Sheets(company + 2).Columns.AutoFit
     
-    Next
-
-    Call addDebt
-
-End Sub
-
-Sub addDebt()
-
-    Dim company As Integer
-    Dim row As Integer
-
-
-    For company = 3 To Sheets.Count
-    
-        Sheets(company).Activate
-    
-        Range("M1").Value = "D = Ent. Value - E (m. Cap) + Cash"
-    
-        For row = 2 To 11
-        
-            If (Range("I" & row).Value <> "n.a.") And (Range("K" & row).Value <> "n.a.") And (Range("E" & row).Value <> "n.a.") Then
-    
-                Range("M" & row).Value = Range("I" & row).Value + Range("K" & row).Value - Range("E" & row).Value
-                
-            End If
-        
-        Next
-        
     Next
 
 End Sub
