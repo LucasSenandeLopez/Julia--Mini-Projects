@@ -7,6 +7,7 @@ import numpy as np;
 """
 CONF_095 = 1.644854;
 TOTAL_CARTERA = 1_000_000;
+DIAS_BETA = 365;
 
 # Para simplificar los cálculos convertiremos los pesos de cada empresa en la cartera en una matriz 5x1
 alphas = np.array([0.2, 0.1, 0.15, 0.35, 0.2]);
@@ -75,12 +76,12 @@ var_diversificado = diversified_var(vector_P, corr_mat);
 
 
 betas = np.zeros((5, 1));
-market_change_data = np.array(ch_data.iloc[-365:, 0]);
+market_change_data = np.array(ch_data.iloc[-DIAS_BETA:, 0]);
 market_var = np.var(market_change_data)
 
 for i in range(1,6,1):
 
-    stock_data = np.array(ch_data.iloc[-365:, i]);
+    stock_data = np.array(ch_data.iloc[-DIAS_BETA:, i]);
 
     both = np.vstack((stock_data, market_change_data));
     betas[i - 1, 0] = np.cov(both)[0, 1] / market_var;
