@@ -1,6 +1,7 @@
 module Differencing
 export difference_series, difference_order
 
+
 """Applies first order differencing"""
 function difference_series(series::Array{Float64, 1}, lag::Int64)
     @assert lag >= 1 "To do differencing you need a lag parameter higher than 1"
