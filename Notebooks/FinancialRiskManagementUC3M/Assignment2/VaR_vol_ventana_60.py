@@ -2,16 +2,16 @@ import pandas as pd;
 import numpy as np;
 
 """
-    Usaremos estas constantes para calcular el VaR al 95% con una cartera de 1_000_000;
-    de querer editar el resultado, esto permite hacerlo con facilidad.
+    Estas constantes nos permiten cambiar los parámetros del VaR de forma sencilla
+    siempre y cuando estos sean verosímiles
 """
-CONF_095 = 1.644854;
+Z_CONF = 1.644854;
 TOTAL_CARTERA = 1_000_000;
 DIAS_BETA = 365;
+ALPHAS = np.reshape(np.array([0.2, 0.1, 0.15, 0.35, 0.2]), (5, 1));
 
-# Para simplificar los cálculos convertiremos los pesos de cada empresa en la cartera en una matriz 5x1
-alphas = np.array([0.2, 0.1, 0.15, 0.35, 0.2]);
-alphas = np.reshape(alphas, (5, 1));
+assert (TOTAL_CARTERA >= 0), "El valor de la cartera debe ser positivo";
+assert (DIAS_BETA > 0 and DIAS_BETA < 6002), "El número de días para la beta debe estar entre [1, 6001]";
 
 def value_at_risk(quantity, volatility, time, Z):
     """
@@ -53,14 +53,17 @@ vol_data = pd.read_csv("C:\\Users\\goomb\\Documents\\Datasets\\FinancialRiskMana
 ch_data=pd.read_csv("C:\\Users\\goomb\\Documents\\Datasets\\FinancialRiskManagement\\Assignment2\\CloseData.csv",
                         date_format ="mm/dd/yy", index_col= "Date");
 
-# Calculamos los cambios con respecto al día anterior
-ch_data["Close_intel"] = np.log(ch_data["Close_intel"].shift(1)/ch_data["Close_intel"]).dropna();
-ch_data["Close_exxon"] = np.log(ch_data["Close_exxon"].shift(1)/ch_data["Close_exxon"]).dropna();
-ch_data["Close_jpmorgan"] = np.log(ch_data["Close_jpmorgan"].shift(1)/ch_data["Close_jpmorgan"]).dropna();
-ch_data["Close_microsoft"] = np.log(ch_data["Close_microsoft"].shift(1)/ch_data["Close_microsoft"]).dropna();
-ch_data["Close_pfizer"] = np.log(ch_data["Close_pfizer"].shift(1)/ch_data["Close_pfizer"]).dropna();
-ch_data["Close_us500"] = np.log(ch_data["Close_us500"].shift(1)/ch_data["Close_us500"]).dropna();
+# Calculamos los cambios con respecto al día anterior, reusamos las columnas por simplicidad
+ch_data["Close_intel"] = np.log(ch_data["Close_intel"].shift(1)/ch_data["Close_intel"]);
+ch_data["Close_exxon"] = np.log(ch_data["Close_exxon"].shift(1)/ch_data["Close_exxon"]);
+ch_data["Close_jpmorgan"] = np.log(ch_data["Close_jpmorgan"].shift(1)/ch_data["Close_jpmorgan"]);
+ch_data["Close_microsoft"] = np.log(ch_data["Close_microsoft"].shift(1)/ch_data["Close_microsoft"]);
+ch_data["Close_pfizer"] = np.log(ch_data["Close_pfizer"].shift(1)/ch_data["Close_pfizer"]);
+ch_data["Close_us500"] = np.log(ch_data["Close_us500"].shift(1)/ch_data["Close_us500"]);
 
+ch_data.drop(["2000-03-30"], axis = 0, inplace = True); # Esta fila tiene valores faltantes
+
+# No cogemos la columna 0 para excluír al S&P500 en las correlaciones
 corr_mat = np.array(ch_data.iloc[:, 1:].corr(), dtype = "float32");
 
 """
@@ -69,7 +72,7 @@ corr_mat = np.array(ch_data.iloc[:, 1:].corr(), dtype = "float32");
     para calcular fácilmente el vector P, que ya contiene los VaRes individuales
 """
 last_day_vols = np.reshape(np.array(vol_data.iloc[-1, 1:]), (5, 1)); 
-vector_P = value_at_risk(TOTAL_CARTERA * alphas, last_day_vols, 1, CONF_095);
+vector_P = value_at_risk(TOTAL_CARTERA * ALPHAS, last_day_vols, 1, Z_CONF);
 
 var_no_diversificado = np.sum(vector_P);
 var_diversificado = diversified_var(vector_P, corr_mat);
@@ -86,7 +89,23 @@ for i in range(1,6,1):
     both = np.vstack((stock_data, market_change_data));
     betas[i - 1, 0] = np.cov(both)[0, 1] / market_var;
 
-var_beta = varBeta(betas, alphas, TOTAL_CARTERA, vol_data.iloc[-1, 0], 1, CONF_095);    
-   
-print("VaRes individuales: ", vector_P[:, 0], "\nVaR no diversificado: ", var_no_diversificado,
-       "\nVaR diversificado: ", var_diversificado, "\nVaR beta: ", var_beta);
+var_beta = varBeta(betas, ALPHAS, TOTAL_CARTERA, vol_data.iloc[-1, 0], 1, Z_CONF);    
+
+"""
+    Usando los parámetros: 
+        Z_CONF = 1.644854 (Correspondiente a nivel de confianza del 95%)
+        TOTAL_CARTERA = 1_000_000
+        DIAS_BETA = 365;
+        ALPHAS = [0.2, 0.1, 0.15, 0.35, 0.2] (En matriz 5x1)
+
+    Obtenemos:
+        VaRes individuales: [8682.96 1875.83 2149.73 6628.7  6207.52] 
+        VaR no diversificado: 25544.74$
+        VaR diversificado: 19081.03$
+        VaR beta: 12281.65$
+"""
+
+print(f"VaRes individuales: {np.round(vector_P[:, 0], 2)}",  
+      f"\nVaR no diversificado: {round(var_no_diversificado, 2)}$", 
+      f"\nVaR diversificado: {round(var_diversificado, 2)}$", 
+      f"\nVaR beta: {round(var_beta, 2)}$");
