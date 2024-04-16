@@ -3,7 +3,16 @@ import numpy as np;
 
 """
     Estas constantes nos permiten cambiar los parámetros del VaR de forma sencilla
-    siempre y cuando estos sean verosímiles
+    siempre y cuando estos sean verosímiles:
+
+    Z_CONF representa el Z_alpha para el nivel de confianza determinado.
+
+    TOTAL_CARTERA es el valor de la cartera.
+
+    DIAS_BETA son los días con los que se calculará la beta, debe ser un entero en 
+    el intervalo [1, 6001].
+
+    ALPHAS son los pesos de cada activo en la cartera.
 """
 Z_CONF = 1.644854;
 TOTAL_CARTERA = 1_000_000;
@@ -99,7 +108,7 @@ var_beta = varBeta(betas, ALPHAS, TOTAL_CARTERA, vol_data.iloc[-1, 0], 1, Z_CONF
         ALPHAS = [0.2, 0.1, 0.15, 0.35, 0.2] (En matriz 5x1)
 
     Obtenemos:
-        VaRes individuales: [8682.96 1875.83 2149.73 6628.7  6207.52] 
+        VaRes individuales: [8682.96 1875.83 2149.73 6628.7 6207.52] 
         VaR no diversificado: 25544.74$
         VaR diversificado: 19081.03$
         VaR beta: 12281.65$

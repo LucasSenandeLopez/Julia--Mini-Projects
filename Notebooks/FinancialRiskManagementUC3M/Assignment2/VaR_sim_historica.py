@@ -5,15 +5,24 @@ import numpy as np;
     Estas constantes te permiten cambiar los parámetros del VaR con falicidad, la serie histórica
     entera que se puede usar es de 6001 miembros así que cualquier número mayor lanzará un error, de
     la misma manera que el resto de los parámetros deben ser verosímiles
+
+    CONF_LEVEL es el nivel  de confianza determinado. Debe ser mayor a 0 y menor a 1.
+
+    TOTAL_CARTERA representa el valor de la cartera.
+
+    ALPHAS es el peso de cada activo en la cartera.
+
+    
+
 """
-NIVEL_CONF = 0.95;
-TOTAL_CARTERA = 1_000_000;
-DIAS_SIM_HISTORICA = 6001;
+CONF_LEVEL = 0.95;
+PORTFOLIO_SIZE = 1_000_000;
+HIST_SIM_DAYS = 6001;
 ALPHAS = np.array([0.2, 0.1, 0.15, 0.35, 0.2]);
 
-assert (TOTAL_CARTERA >= 0), "El valor de la cartera debe ser positivo"; 
-assert (NIVEL_CONF > 0 and NIVEL_CONF < 1), "El nivel de confianza debe estar entre (0, 1)";
-assert (DIAS_SIM_HISTORICA < 6002 and DIAS_SIM_HISTORICA > 0), "La serie histórica dura 6001 días";
+assert (PORTFOLIO_SIZE >= 0), "El valor de la cartera debe ser positivo"; 
+assert (CONF_LEVEL > 0 and CONF_LEVEL < 1), "El nivel de confianza debe estar entre (0, 1)";
+assert (HIST_SIM_DAYS< 6002 and HIST_SIM_DAYS > 0), "La serie histórica dura 6001 días";
 
 
 ch_data = pd.read_csv("C:\\Users\\goomb\\Documents\\Datasets\\FinancialRiskManagement\\Assignment2\\CloseData.csv",
@@ -30,8 +39,8 @@ ch_data.drop(["Close_us500"], axis = 1, inplace = True); # No necesitamos el S&P
 ch_data.drop(["2000-03-30"], axis = 0, inplace = True); # Esta fila tiene valores faltantes
 
 
-Var_data_scenarios = np.sum(ch_data.iloc[:, -DIAS_SIM_HISTORICA:] * TOTAL_CARTERA * ALPHAS, axis = 1);
-VaR = round(abs(np.quantile(Var_data_scenarios, 1 - NIVEL_CONF)), 2);
+Var_data_scenarios = np.sum(ch_data.iloc[:, -HIST_SIM_DAYS:] * PORTFOLIO_SIZE * ALPHAS, axis = 1);
+VaR = round(abs(np.quantile(Var_data_scenarios, 1 - CONF_LEVEL)), 2);
 
 """
     El VaR con los parámetros:
